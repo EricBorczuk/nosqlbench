@@ -16,6 +16,7 @@ import io.nosqlbench.engine.api.metrics.ActivityMetrics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Optional;
 import java.net.http.HttpClient;
 import java.util.function.Function;
 
@@ -118,6 +119,18 @@ public class HttpActivity extends SimpleActivity implements Activity, ActivityDe
                     return r;
                 }).orElse(HttpClient.Redirect.NORMAL);
         builder = builder.followRedirects(follow_redirects);
+        Optional<HttpClient.Version> httpVersion = getParams().getOptionalString("http_version")
+        .map(ver -> {
+            if (ver.equals("1.1")) {
+                return HttpClient.Version.HTTP_1_1;
+            } else {
+                return HttpClient.Version.HTTP_2;
+            }
+        });
+        if (httpVersion.isPresent()) {
+            logger.debug("http_version=>" + httpVersion.get());
+            builder = builder.version(httpVersion.get());
+        }
         return builder.build();
     }
 
